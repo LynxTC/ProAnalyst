@@ -414,6 +414,10 @@ func main() {
 
 	r := mux.NewRouter()
 	// ... 你的路由設定 ...
+
+	r.HandleFunc("/api/programs", getPrograms).Methods("GET")
+	r.HandleFunc("/api/check", checkProgramsHandler).Methods("POST", "OPTIONS")
+
 	http.ListenAndServe(":"+port, commonMiddleware(r))
 
 	// 3. 啟動伺服器：務必監聽 "0.0.0.0"
