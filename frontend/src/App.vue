@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 
 // --- 狀態管理 ---
-const BACKEND_URL = 'https://program-checker.onrender.com'; // Go 後端服務地址
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || ''; // Go 後端服務地址
 
 const programs = ref({}); // 所有學程定義 {id: {name, min_credits, ...}}
 const selectedProgramIds = ref([]); // 選取的學程 ID 列表
