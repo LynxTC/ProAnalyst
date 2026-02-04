@@ -4,13 +4,22 @@ import { ref, onMounted, computed } from 'vue';
 // --- 狀態管理 ---
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || ''; // Go 後端服務地址
 
-const programs = ref({}); // 所有學程定義 {id: {name, min_credits, ...}}
+// 定義學院顯示順序
+const COLLEGE_ORDER = [
+    "文學院", "社會科學學院", "商學院", "傳播學院", "外國語文學院", 
+    "法學院", "理學院", "國際事務學院", "教育學院", "創新國際學院", 
+    "資訊學院", "X實驗學院"
+];
+
+const programsByCollege = ref({}); // 所有學程定義 (按學院分類)
+const selectedCollege = ref(''); // 目前選擇的學院
 const selectedProgramIds = ref([]); // 選取的學程 ID 列表
 const studentFile = ref(null); // 上傳的 JSON 檔案
 const uploadStatus = ref(''); // 檔案上傳狀態訊息
 const programSelectionStatus = ref(''); // 學程選擇狀態訊息
 const checkResults = ref([]); // 檢核結果列表
 const isChecking = ref(false); // 檢核按鈕 loading 狀態
+const showDownloadHelp = ref(false); // 是否顯示下載說明
 
 // --- 核心邏輯 ---
 
@@ -23,7 +32,11 @@ const loadPrograms = async () => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        programs.value = await response.json();
+        programsByCollege.value = await response.json();
+        // 預設選取第一個學院
+        if (sortedCollegeNames.value.length > 0) {
+            selectedCollege.value = sortedCollegeNames.value[0];
+        }
     } catch (error) {
         console.error("載入學程列表失敗:", error);
         alert('無法連線到 Go 後端服務 (請確認 Go 程式已執行於 :8080)');
@@ -100,6 +113,23 @@ const startCheck = async () => {
 
 // --- Computed 屬性 (用於 UI 邏輯) ---
 
+const sortedCollegeNames = computed(() => {
+    return Object.keys(programsByCollege.value).sort((a, b) => {
+        const indexA = COLLEGE_ORDER.indexOf(a);
+        const indexB = COLLEGE_ORDER.indexOf(b);
+        
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
+    });
+});
+
+const currentPrograms = computed(() => {
+    if (!selectedCollege.value) return {};
+    return programsByCollege.value[selectedCollege.value] || {};
+});
+
 const isReadyToCheck = computed(() => {
     return studentFile.value !== null && selectedProgramIds.value.length > 0 && !isChecking.value;
 });
@@ -109,6 +139,18 @@ const buttonText = computed(() => {
     if (!studentFile.value) return '請先上傳檔案';
     if (selectedProgramIds.value.length === 0) return '請選取學程後點擊開始檢核';
     return '開始檢核';
+});
+
+const selectedProgramNames = computed(() => {
+    const names = [];
+    for (const college of Object.values(programsByCollege.value)) {
+        for (const [id, program] of Object.entries(college)) {
+            if (selectedProgramIds.value.includes(id)) {
+                names.push(program.name);
+            }
+        }
+    }
+    return names;
 });
 
 // --- Lifecycle 鉤子 ---
@@ -137,7 +179,19 @@ const safeCheckResults = computed(() => {
             <h2 class="text-xl font-semibold text-blue-700 mb-3 flex items-center">
                 <span class="inline-flex items-center justify-center w-8 h-8 mr-3 bg-blue-500 text-white text-lg font-bold rounded-full">1</span>
                 上傳全人資料 (JSON 檔)
+                <span 
+                    @click="showDownloadHelp = !showDownloadHelp" 
+                    class="ml-3 text-sm text-gray-400 cursor-pointer hover:text-gray-600 underline decoration-dotted transition-colors select-none"
+                >
+                    如何下載全人資料?
+                </span>
             </h2>
+            <div v-if="showDownloadHelp" class="mb-4 p-4 bg-white border border-blue-100 rounded-lg shadow-sm text-sm text-gray-600 leading-relaxed">
+                <p class="mb-1"><span class="font-bold">Step 1️⃣：</span>進入政大首頁並且登入 iNCCU</p>
+                <p class="mb-1"><span class="font-bold">Step 2️⃣：</span>點選「進入我的全人」</p>
+                <p class="mb-1"><span class="font-bold">Step 3️⃣：</span>下滑到底，在「相關連結」找到「資料格式化匯出」選項，進入後選擇「課業學習」後下載</p>
+                <p><span class="font-bold">Step 4️⃣：</span>得到熱騰騰的全人資料 JSON 檔案！</p>
+            </div>
             <input type="file" id="jsonFile" accept=".json" @change="handleFileChange" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition duration-150">
             <p id="uploadStatus" class="mt-2 text-sm" :class="{
                 'text-emerald-600': uploadStatus.includes('檔案已載入') || uploadStatus.includes('檢核完成'),
@@ -151,19 +205,38 @@ const safeCheckResults = computed(() => {
                 <span class="inline-flex items-center justify-center w-8 h-8 mr-3 bg-green-500 text-white text-lg font-bold rounded-full">2</span>
                 選取欲檢核的學分學程 (可複選)
             </h2>
+            
+            <!-- 學院選擇下拉選單 -->
+            <div class="mb-4">
+                <label for="collegeSelect" class="block text-sm font-medium text-gray-700 mb-1">選擇學院：</label>
+                <select id="collegeSelect" v-model="selectedCollege" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option v-for="collegeName in sortedCollegeNames" :key="collegeName" :value="collegeName">{{ collegeName }}</option>
+                </select>
+            </div>
+
             <div id="programCheckboxes" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div v-for="(program, id) in programs" :key="id" class="flex items-start">
+                <div v-for="(program, id) in currentPrograms" :key="id" class="flex items-start">
                     <input :id="id" type="checkbox" :value="id" v-model="selectedProgramIds" class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                     <label :for="id" class="ml-3 text-sm font-medium text-gray-700">
                         {{ program.name }}
                         <p class="text-xs text-gray-500 mt-0.5">{{ program.description.split('，')[0] }}</p>
                     </label>
                 </div>
-                <div v-if="Object.keys(programs).length === 0" class="text-sm text-red-500">
+                <div v-if="Object.keys(programsByCollege).length === 0" class="text-sm text-red-500">
                     載入學程清單中...
                 </div>
             </div>
             <p id="programSelectionStatus" class="mt-4 text-sm text-red-500" v-show="programSelectionStatus">{{ programSelectionStatus }}</p>
+
+            <!-- 顯示已選擇的學程 -->
+            <div v-if="selectedProgramNames.length > 0" class="mt-4 pt-4 border-t border-green-200">
+                <p class="text-sm font-bold text-green-800 mb-2">已選擇的學程：</p>
+                <div class="flex flex-wrap gap-2">
+                    <span v-for="name in selectedProgramNames" :key="name" class="px-3 py-1 bg-white text-green-700 text-sm font-medium rounded-full border border-green-300 shadow-sm">
+                        {{ name }}
+                    </span>
+                </div>
+            </div>
         </div>
 
         <div class="mb-8">

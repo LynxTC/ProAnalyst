@@ -26,9 +26,10 @@ type StudentCourse struct {
 
 // 學程要求中的一個分類
 type ProgramRequirement struct {
-	Category string   `json:"category"`
-	MinCount int      `json:"min_count"`
-	Courses  []string `json:"courses"` // 課程名稱列表
+	Category   string   `json:"category"`
+	MinCount   int      `json:"min_count"`
+	MinCredits float64  `json:"min_credits"`
+	Courses    []string `json:"courses"` // 課程名稱列表
 }
 
 // 單一學程定義
@@ -87,6 +88,7 @@ type StudentDataWrapper []struct {
 
 // --- 全局變數 ---
 var programs map[string]Program
+var programsByCollege map[string]map[string]Program
 
 // --- 輔助函式 ---
 
@@ -109,10 +111,17 @@ func loadPrograms(filename string) error {
 		return err
 	}
 
-	programs = make(map[string]Program)
-	err = json.Unmarshal(file, &programs)
+	programsByCollege = make(map[string]map[string]Program)
+	err = json.Unmarshal(file, &programsByCollege)
 	if err != nil {
 		return fmt.Errorf("無法解析 programs.json: %w", err)
+	}
+
+	programs = make(map[string]Program)
+	for _, collegeMap := range programsByCollege {
+		for id, p := range collegeMap {
+			programs[id] = p
+		}
 	}
 	return nil
 }
@@ -207,6 +216,26 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 	isManagementAccounting := programID == "management_accounting"
 
 	if isManagementAccounting {
+		// 規則：若「經濟學」修習未達 6 學分，則不採計（以 0 學分計）
+		econCredits := 0.0
+		for _, c := range completedCourses {
+			if c.Name == "經濟學" {
+				econCredits += c.Credit
+			}
+		}
+
+		if econCredits < 6.0 {
+			totalPassedCredits -= econCredits
+			// 從已通過課程列表中移除經濟學，以免誤導
+			var newCompleted []StudentCourse
+			for _, c := range completedCourses {
+				if c.Name != "經濟學" {
+					newCompleted = append(newCompleted, c)
+				}
+			}
+			completedCourses = newCompleted
+		}
+
 		isMet := totalPassedCredits >= program.MinCredits
 
 		// 計算不重複的已通過課程門數
@@ -246,12 +275,17 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 
 			// 計算不重複的已通過課程門數
 			uniquePassedCourseNames := make(map[string]bool)
+			passedCreditsInCategory := 0.0
 			for _, c := range passedInThisCategory {
 				uniquePassedCourseNames[c.Name] = true
+				passedCreditsInCategory += c.Credit
 			}
 			passedCount := len(uniquePassedCourseNames)
 
 			isMet := passedCount >= req.MinCount
+			if req.MinCredits > 0 && passedCreditsInCategory < req.MinCredits {
+				isMet = false
+			}
 			if !isMet {
 				allCategoriesMet = false
 			}
@@ -316,17 +350,11 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 // 獲取學程列表
 func getPrograms(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	// 允許跨域 (CORS)，重要！
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	json.NewEncoder(w).Encode(programs)
+	json.NewEncoder(w).Encode(programsByCollege)
 }
 
 // 處理檔案上傳和檢核
 func checkProgramsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
 	// 處理 OPTIONS 請求 (CORS 預檢)
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
@@ -407,7 +435,7 @@ func main() {
 	// 1. 處理 Port：優先讀取環境變數 PORT，若無則預設為 10000 (Render 常用) 或 8080
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "10000"
+		port = "8080"
 	}
 
 	// 2. 讀取 programs.json (假設你在 init 或 main 中讀取)
@@ -426,11 +454,9 @@ func main() {
 	r.HandleFunc("/api/programs", getPrograms).Methods("GET")
 	r.HandleFunc("/api/check", checkProgramsHandler).Methods("POST", "OPTIONS")
 
-	http.ListenAndServe(":"+port, commonMiddleware(r))
-
 	// 3. 啟動伺服器：務必監聽 "0.0.0.0"
 	fmt.Printf("伺服器已啟動於 Port %s...\n", port)
-	err = http.ListenAndServe(":"+port, r)
+	err = http.ListenAndServe(":"+port, commonMiddleware(r))
 	if err != nil {
 		fmt.Printf("伺服器啟動失敗: %v\n", err)
 	}
