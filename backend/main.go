@@ -36,11 +36,12 @@ type ProgramRequirement struct {
 
 // 單一學程定義
 type Program struct {
-	Name         string               `json:"name"`
-	MinCredits   float64              `json:"min_credits"`
-	Description  string               `json:"description"`
-	Requirements []ProgramRequirement `json:"requirements"`
-	Type         string               `json:"type"` // "micro" (微學程) or "credit" (學分學程)
+	Name                    string               `json:"name"`
+	MinCredits              float64              `json:"min_credits"`
+	Description             string               `json:"description"`
+	Requirements            []ProgramRequirement `json:"requirements"`
+	Type                    string               `json:"type"`                      // "micro" (微學程) or "credit" (學分學程)
+	GeneralEducationCourses []string             `json:"general_education_courses"` // 通識課程列表 (全域限修一門)
 }
 
 // 檢核結果中的一個分類結果
@@ -202,30 +203,112 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 		return CheckResult{ProgramName: fmt.Sprintf("學程 ID %s 不存在", programID)}
 	}
 
-	totalPassedCredits := 0.0
-	var completedCourses []StudentCourse  // 儲存所有已通過的學程相關課程
+	// var completedCourses []StudentCourse  // 儲存所有已通過的學程相關課程 (已移至下方定義)
 	var inProgressCourses []StudentCourse // 儲存所有修習中的學程相關課程
 
 	// 找出所有學程要求中涉及的課程名稱集合 (使用清理後的名稱作為 Key)
 	programCourseNamesClean := make(map[string]bool)
-	for _, req := range program.Requirements {
-		for _, courseName := range req.Courses {
-			// 對 programs.json 中的名稱進行標準化處理
-			programCourseNamesClean[normalizeCourseName(courseName)] = true
-		}
+	geCourseNames := make(map[string]bool) // 通識課程集合
+
+	// 建立 Requirements 的副本，以便進行特殊處理 (如移除課程名稱中的教師名) 而不影響全域變數
+	localRequirements := make([]ProgramRequirement, len(program.Requirements))
+	for i, req := range program.Requirements {
+		localRequirements[i] = req
+		coursesCopy := make([]string, len(req.Courses))
+		copy(coursesCopy, req.Courses)
+		localRequirements[i].Courses = coursesCopy
 	}
 
-	// 步驟 1: 篩選與學程相關的課程並計算總學分
+	// 特殊處理：東南亞區域研究微學程 (southeast_asian_area_studies)
+	// 建立 課程名稱 -> 教師名稱 的對應表
+	courseInstructorMap := make(map[string]string)
+	isSoutheastAsianProgram := programID == "southeast_asian_area_studies"
+
+	for i, req := range localRequirements {
+		for j, courseName := range req.Courses {
+			// 處理 "課程名稱(教師名)" 的格式，僅針對特定學程
+			if isSoutheastAsianProgram && strings.Contains(courseName, "(") && strings.HasSuffix(courseName, ")") {
+				start := strings.LastIndex(courseName, "(")
+				realName := strings.TrimSpace(courseName[:start])
+				instructor := courseName[start+1 : len(courseName)-1]
+
+				// 更新副本中的課程名稱為真實名稱，以便後續比對
+				localRequirements[i].Courses[j] = realName
+
+				// 記錄該課程對應的教師
+				norm := normalizeCourseName(realName)
+				courseInstructorMap[norm] = instructor
+
+				// 使用真實名稱加入檢查清單
+				programCourseNamesClean[norm] = true
+			} else {
+				// 對 programs.json 中的名稱進行標準化處理
+				programCourseNamesClean[normalizeCourseName(courseName)] = true
+			}
+		}
+	}
+	// 加入通識課程定義
+	for _, courseName := range program.GeneralEducationCourses {
+		norm := normalizeCourseName(courseName)
+		programCourseNamesClean[norm] = true
+		geCourseNames[norm] = true
+	}
+
+	// 步驟 1: 篩選與學程相關的課程，並處理通識課程限修一門的規則
+	var relevantPassed []StudentCourse
 	for _, course := range courses {
 		if _, ok := programCourseNamesClean[course.Name]; ok {
 			if course.IsPassed {
-				totalPassedCredits += course.Credit
-				completedCourses = append(completedCourses, course)
+				relevantPassed = append(relevantPassed, course)
 			} else if course.IsInProgress {
 				inProgressCourses = append(inProgressCourses, course)
 			}
 		}
 	}
+
+	// 特殊處理：東南亞區域研究微學程 - 同一名老師開設課程至多認列兩門
+	if isSoutheastAsianProgram {
+		instructorCounts := make(map[string]int)
+		var filteredByInstructor []StudentCourse
+
+		// 先對已通過課程排序 (學分高者優先)，確保剔除的是學分較少或較不重要的
+		sort.Slice(relevantPassed, func(i, j int) bool {
+			return relevantPassed[i].Credit > relevantPassed[j].Credit
+		})
+
+		for _, c := range relevantPassed {
+			norm := normalizeCourseName(c.Name)
+			if instructor, ok := courseInstructorMap[norm]; ok {
+				if instructorCounts[instructor] < 2 {
+					instructorCounts[instructor]++
+					filteredByInstructor = append(filteredByInstructor, c)
+				}
+			} else {
+				filteredByInstructor = append(filteredByInstructor, c)
+			}
+		}
+		relevantPassed = filteredByInstructor
+	}
+
+	// 處理通識課程：若超過一門，僅保留學分最高者
+	var gePassed []StudentCourse
+	var otherPassed []StudentCourse
+	for _, c := range relevantPassed {
+		if geCourseNames[c.Name] {
+			gePassed = append(gePassed, c)
+		} else {
+			otherPassed = append(otherPassed, c)
+		}
+	}
+	if len(gePassed) > 1 {
+		sort.Slice(gePassed, func(i, j int) bool {
+			return gePassed[i].Credit > gePassed[j].Credit
+		})
+		gePassed = gePassed[:1]
+	}
+	completedCourses := append(otherPassed, gePassed...)
+
+	totalPassedCredits := 0.0 // 將由後續計算有效學分決定
 
 	// 步驟 2 & 3: 檢核分類要求 (門數) 和總學分
 	var categoryResults []CategoryResult
@@ -237,7 +320,9 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 	if isManagementAccounting {
 		// 規則：若「經濟學」修習未達 6 學分，則不採計（以 0 學分計）
 		econCredits := 0.0
+		totalPassedCredits = 0.0
 		for _, c := range completedCourses {
+			totalPassedCredits += c.Credit
 			if c.Name == "經濟學" {
 				econCredits += c.Credit
 			}
@@ -276,7 +361,7 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 		effectiveTotalCredits := 0.0 // 用於計算考慮 MaxCount 後的有效總學分
 
 		// 一般學程邏輯
-		for _, req := range program.Requirements {
+		for _, req := range localRequirements {
 			var passedInThisCategory []StudentCourse // 該分類下已通過的課程紀錄
 
 			// 找出該類別已通過課程

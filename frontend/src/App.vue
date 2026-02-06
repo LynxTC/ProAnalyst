@@ -157,17 +157,21 @@ const buttonText = computed(() => {
     return '開始檢核';
 });
 
-const selectedProgramNames = computed(() => {
-    const names = [];
+const selectedProgramsList = computed(() => {
+    const list = [];
     for (const college of Object.values(programsByCollege.value)) {
         for (const [id, program] of Object.entries(college)) {
             if (selectedProgramIds.value.includes(id)) {
-                names.push(program.name);
+                list.push({ id, name: program.name });
             }
         }
     }
-    return names;
+    return list;
 });
+
+const removeProgram = (id) => {
+    selectedProgramIds.value = selectedProgramIds.value.filter(pid => pid !== id);
+};
 
 // --- Lifecycle 鉤子 ---
 onMounted(() => {
@@ -250,6 +254,10 @@ const safeCheckResults = computed(() => {
                 </div>
             </div>
 
+            <p v-if="selectedProgramType === 'micro'" class="text-sm text-gray-500 mb-4">
+                註：微學程所認列之通識課程以一門為限（以學分較多者計）
+            </p>
+
             <div id="programCheckboxes" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div v-for="(program, id) in currentPrograms" :key="id" class="flex items-start">
                     <input :id="id" type="checkbox" :value="id" v-model="selectedProgramIds"
@@ -267,12 +275,12 @@ const safeCheckResults = computed(() => {
                 programSelectionStatus }}</p>
 
             <!-- 顯示已選擇的學程 -->
-            <div v-if="selectedProgramNames.length > 0" class="mt-4 pt-4 border-t border-green-200">
-                <p class="text-sm font-bold text-green-800 mb-2">已選擇的學程：</p>
+            <div v-if="selectedProgramsList.length > 0" class="mt-4 pt-4 border-t border-green-200">
+                <p class="text-sm font-bold text-green-800 mb-2">已選擇的學程（點擊可取消）：</p>
                 <div class="flex flex-wrap gap-2">
-                    <span v-for="name in selectedProgramNames" :key="name"
-                        class="px-3 py-1 bg-white text-green-700 text-sm font-medium rounded-full border border-green-300 shadow-sm">
-                        {{ name }}
+                    <span v-for="p in selectedProgramsList" :key="p.id" @click="removeProgram(p.id)"
+                        class="px-3 py-1 bg-white text-green-700 text-sm font-medium rounded-full border border-green-300 shadow-sm cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex items-center group">
+                        {{ p.name }}
                     </span>
                 </div>
             </div>
