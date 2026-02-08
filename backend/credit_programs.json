@@ -104,7 +104,7 @@
                 }
             ]
         },
-        "mandarin_teach": {
+        "teaching_chinese": {
             "name": "華語文教學學分學程",
             "min_credits": 18.0,
             "description": "修習認列科目達 18 學分，三大領域皆須至少修畢 2 門",
@@ -218,7 +218,7 @@
                     ]
                 },
                 {
-                    "category": "社會文化與宗教領域（選修）_學士班",
+                    "category": "社會文化與宗教領域（選修）（學士班）",
                     "courses": [
                         "東南亞伊斯蘭文明",
                         "東南亞歷史文化",
@@ -226,7 +226,7 @@
                     ]
                 },
                 {
-                    "category": "社會文化與宗教領域（選修）_碩士班",
+                    "category": "社會文化與宗教領域（選修）（碩士班）",
                     "min_count": 1,
                     "courses": [
                         "東南亞與跨國禪修",
@@ -461,7 +461,7 @@
                 }
             ]
         },
-        "developement_study": {
+        "developement": {
             "name": "發展研究學分學程",
             "min_credits": 15.0,
             "description": "修習認列科目達 15 學分（必修 1 + 群修 9 + 選修 5）",
@@ -1078,7 +1078,7 @@
                 }
             ]
         },
-        "language_cognitive_brain": {
+        "language_cognition_brain": {
             "name": "語言、認知與大腦學分學程",
             "min_credits": 20.0,
             "description": "至少修滿 20 學分",
@@ -1294,7 +1294,7 @@
             ]
         },
         "EU_study_international_undergraduate": {
-            "name": "歐洲聯盟研究國際學分學程_學士班",
+            "name": "歐洲聯盟研究國際學分學程（學士班）",
             "min_credits": 15.0,
             "description": "修習認列科目達 15 學分（含必修 3）",
             "requirements": [
@@ -1326,7 +1326,7 @@
             ]
         },
         "EU_study_international_master": {
-            "name": "歐洲聯盟研究國際學分學程_碩士班",
+            "name": "歐洲聯盟研究國際學分學程（碩士班）",
             "min_credits": 15.0,
             "description": "修習認列科目達 15 學分（含必修 3）",
             "requirements": [
@@ -1715,7 +1715,7 @@
         }
     },
     "跨院": {
-        "foreign_communication_second_specialty": {
+        "foreign_language_communication": {
             "name": "外語傳播第二專長學分學程（外國語文學院x傳播學院）",
             "min_credits": 24.0,
             "description": "修習認列科目達 24 學分（外語 12 + 傳播 12。註：因外語領域認列範圍較廣，無法於此檢核，僅供檢核傳播領域）",
@@ -1795,7 +1795,7 @@
                 }
             ]
         },
-        "foreign_language_specialty_business_management": {
+        "foreign_language_student_business_primer": {
             "name": "外語專長商管學分學程（外國語文學院x商學院）",
             "min_credits": 21.0,
             "description": "修習認列科目達 21 學分（必修 12 + 群修 9）",
