@@ -340,8 +340,8 @@ const safeCheckResults = computed(() => {
                             <span>{{ cat.category }}</span>
                             <div class="text-right">
                                 <div v-if="cat.requiredCount > 0">
-                                    已修畢: <span class="font-bold">{{ cat.passedCount }} 門</span> / 應修: <span
-                                        class="font-bold">{{ cat.requiredCount }} 門</span>
+                                    已修畢: <span class="font-bold">{{ cat.passedCount }} {{ cat.category.includes('跨群選修要求') ? '群' : '門' }}</span> / 應修: <span
+                                        class="font-bold">{{ cat.requiredCount }} {{ cat.category.includes('跨群選修要求') ? '群' : '門' }}</span>
                                 </div>
                                 <div v-if="cat.requiredCredits > 0">
                                     已修畢: <span class="font-bold">{{ cat.passedCredits.toFixed(1) }} 學分</span> / 應修: <span
@@ -360,7 +360,7 @@ const safeCheckResults = computed(() => {
                                 class="font-semibold">{{
                                 cat.isMet ? '已達成' : '未達成' }}</span>
                         </p>
-                        <div v-if="cat.category !== '群A + 群B 總修習門數'" class="mt-2 text-xs text-gray-700">
+                        <div v-if="cat.category !== '群A + 群B 總修習門數' && cat.category !== '跨群選修要求 (A-D群至少兩群)'" class="mt-2 text-xs text-gray-700">
                             <p class="font-semibold mb-1">已通過課程 ({{ cat.passedCourses.length }} 筆紀錄):</p>
                             <ul
                                 class="list-disc list-inside ml-2 max-h-32 overflow-y-auto custom-scrollbar bg-white p-2 rounded">

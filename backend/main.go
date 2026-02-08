@@ -121,8 +121,9 @@ func loadPrograms() error {
 
 	// 定義檔案與學程類型的對應
 	files := map[string]string{
-		"micro_programs.json":  "micro",
-		"credit_programs.json": "credit",
+		"micro_programs.json":              "micro",
+		"credit_programs.json":             "credit",
+		"commerce_specialty_programs.json": "credit",
 	}
 
 	for filename, pType := range files {
@@ -257,6 +258,23 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 		norm := normalizeCourseName(courseName)
 		programCourseNamesClean[norm] = true
 		geCourseNames[norm] = true
+	}
+
+	// 特殊處理：近代社會的身體與性別跨領域學分學程 (modern_society_body_gender)
+	// 雖然是學分學程，但有「通識課程至多認列一門」的規定
+	if programID == "modern_society_body_gender" {
+		geCourses := []string{
+			"自我、身體、文化",
+			"同志生命美學",
+			"臺灣電影與文學中的性別",
+			"身心障礙與臺灣藝文",
+			"藝術、自我探索與文化溯源",
+		}
+		for _, courseName := range geCourses {
+			norm := normalizeCourseName(courseName)
+			programCourseNamesClean[norm] = true
+			geCourseNames[norm] = true
+		}
 	}
 
 	// 步驟 1: 篩選與學程相關的課程，並處理通識課程限修一門的規則
@@ -750,6 +768,99 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 					categoryResults = append(categoryResults[:insertIdx], append([]CategoryResult{newResult}, categoryResults[insertIdx:]...)...)
 				} else {
 					categoryResults = append(categoryResults, newResult)
+				}
+			}
+		}
+
+		// 特殊處理：跨領域精準健康學分學程
+		if program.Name == "跨領域精準健康學分學程" {
+			targetGroups := []string{"群A", "群B", "群C", "群D"}
+			metGroups := 0
+			for _, group := range targetGroups {
+				for _, res := range categoryResults {
+					if strings.Contains(res.Category, group) && res.PassedCount > 0 {
+						metGroups++
+						break
+					}
+				}
+			}
+
+			isMet := metGroups >= 2
+			msg := ""
+			if !isMet {
+				allCategoriesMet = false
+				msg = "須於群A至群D中至少修習兩群課程"
+			}
+
+			newResult := CategoryResult{
+				Category:        "跨群選修要求 (群A至群D至少兩群)",
+				RequiredCount:   2,
+				PassedCount:     metGroups,
+				PassedCredits:   0,
+				IsMet:           isMet,
+				LimitExceeded:   false,
+				ExceededMessage: msg,
+				PassedCourses:   []StudentCourse{},
+			}
+
+			// 插入在 "群D" 之後
+			insertIdx := -1
+			for i, res := range categoryResults {
+				if strings.Contains(res.Category, "群D") {
+					insertIdx = i + 1
+				}
+			}
+
+			if insertIdx != -1 && insertIdx <= len(categoryResults) {
+				categoryResults = append(categoryResults[:insertIdx], append([]CategoryResult{newResult}, categoryResults[insertIdx:]...)...)
+			} else {
+				categoryResults = append(categoryResults, newResult)
+			}
+		}
+
+		// 特殊處理：東南亞文化與宗教跨領域學分學程 (southeast_asia_culture_religion_interdisciplinary)
+		if programID == "southeast_asia_culture_religion_interdisciplinary" {
+			for i := range categoryResults {
+				if strings.Contains(categoryResults[i].Category, "語言領域") {
+					passed := categoryResults[i].PassedCourses
+
+					hasViet := false
+					hasIndo := false
+					hasThai := false
+
+					checkPair := func(name string) bool {
+						found1 := false
+						found2 := false
+						for _, c := range passed {
+							if c.Name == name {
+								if c.Semester == "1" {
+									found1 = true
+								}
+								if c.Semester == "2" {
+									found2 = true
+								}
+							}
+						}
+						return found1 && found2
+					}
+
+					if checkPair("初級越語") {
+						hasViet = true
+					}
+					if checkPair("初級印尼語") {
+						hasIndo = true
+					}
+					if checkPair("初級泰語") {
+						hasThai = true
+					}
+
+					if !hasViet && !hasIndo && !hasThai {
+						categoryResults[i].IsMet = false
+						allCategoriesMet = false
+						categoryResults[i].LimitExceeded = true
+						categoryResults[i].ExceededMessage = "須修畢同一語言之第一學期及第二學期課程（如：初級越語 上/下學期）"
+					}
+					break
 				}
 			}
 		}
