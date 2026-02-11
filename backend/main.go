@@ -226,7 +226,7 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 	}
 
 	// var completedCourses []StudentCourse  // 儲存所有已通過的學程相關課程 (已移至下方定義)
-	var inProgressCourses []StudentCourse // 儲存所有修習中的學程相關課程
+	inProgressCourses := []StudentCourse{} // 儲存所有修習中的學程相關課程
 
 	// 找出所有學程要求中涉及的課程名稱集合 (使用清理後的名稱作為 Key)
 	programCourseNamesClean := make(map[string]bool)
@@ -592,7 +592,7 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 	totalPassedCredits := 0.0 // 將由後續計算有效學分決定
 
 	// 步驟 2 & 3: 檢核分類要求 (門數) 和總學分
-	var categoryResults []CategoryResult
+	categoryResults := []CategoryResult{}
 	allCategoriesMet := true
 
 	// 特殊處理：管理會計專業學程 (management_accounting)
@@ -651,7 +651,7 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 
 		// 一般學程邏輯
 		for _, req := range localRequirements {
-			var passedInThisCategory []StudentCourse // 該分類下已通過的課程紀錄
+			passedInThisCategory := []StudentCourse{} // 該分類下已通過的課程紀錄
 
 			// 找出該類別已通過課程
 			for _, c := range completedCourses {
@@ -764,11 +764,6 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 
 			if !isMet {
 				allCategoriesMet = false
-			}
-
-			// 修正：確保 passedInThisCategory 在沒有課程時是空切片
-			if passedInThisCategory == nil {
-				passedInThisCategory = []StudentCourse{}
 			}
 
 			categoryResults = append(categoryResults, CategoryResult{
@@ -1145,22 +1140,6 @@ func checkProgramCompletion(programID string, courses []StudentCourse) CheckResu
 		isCompleted = false
 	}
 
-	// 修正：確保 inProgressCourses 在沒有課程時是空切片 (為了解決前端 'null' 錯誤)
-	if inProgressCourses == nil {
-		inProgressCourses = []StudentCourse{}
-	}
-	// 確保 CategoryResults 內部的 PassedCourses 不為 nil
-	for i := range categoryResults {
-		// Go 語言中，切片在未賦值的情況下可能為 nil，序列化後即為 null。
-		if categoryResults[i].PassedCourses == nil {
-			categoryResults[i].PassedCourses = []StudentCourse{}
-		}
-	}
-	// 修正：確保 categoryResults 在沒有課程時是空切片 (如果結構允許)
-	if categoryResults == nil {
-		categoryResults = []CategoryResult{}
-	}
-
 	return CheckResult{
 		ProgramName:        program.Name,
 		IsCompleted:        isCompleted,
@@ -1193,6 +1172,30 @@ func getPrograms(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(programsByCollege)
 }
 
+// 輔助函式：從請求中解析學生資料
+func parseStudentDataFromRequest(r *http.Request) ([]StudentCourse, error) {
+	// 1. 解析 multipart 表單
+	err := r.ParseMultipartForm(32 << 20) // 32MB
+	if err != nil {
+		return nil, fmt.Errorf("解析表單失敗: %w", err)
+	}
+
+	// 2. 讀取學生 JSON 檔案
+	file, _, err := r.FormFile("student_json")
+	if err != nil {
+		return nil, fmt.Errorf("讀取檔案失敗: %w", err)
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("讀取檔案內容失敗: %w", err)
+	}
+
+	// 3. 解析學生課程資料
+	return loadStudentData(fileBytes)
+}
+
 // 處理檔案上傳和檢核
 func checkProgramsHandler(w http.ResponseWriter, r *http.Request) {
 	// 處理 OPTIONS 請求 (CORS 預檢)
@@ -1201,14 +1204,14 @@ func checkProgramsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. 解析 multipart 表單
-	err := r.ParseMultipartForm(32 << 20) // 32MB
+	// 解析學生資料
+	studentCourses, err := parseStudentDataFromRequest(r)
 	if err != nil {
-		http.Error(w, "解析表單失敗: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// 2. 獲取選取的學程 ID
+	// 獲取選取的學程 ID
 	programIDsStr := r.PostFormValue("program_ids")
 	if programIDsStr == "" {
 		http.Error(w, "請選取至少一個學程 ID", http.StatusBadRequest)
@@ -1217,35 +1220,14 @@ func checkProgramsHandler(w http.ResponseWriter, r *http.Request) {
 	// 假設前端傳送的是逗號分隔的 ID 字串
 	programIDs := strings.Split(programIDsStr, ",")
 
-	// 3. 讀取學生 JSON 檔案
-	file, _, err := r.FormFile("student_json")
-	if err != nil {
-		http.Error(w, "讀取檔案失敗: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		http.Error(w, "讀取檔案內容失敗: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// 4. 解析學生課程資料
-	studentCourses, err := loadStudentData(fileBytes)
-	if err != nil {
-		http.Error(w, "解析學生資料失敗: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// 5. 執行檢核
+	// 執行檢核
 	var results []CheckResult
 	for _, id := range programIDs {
 		result := checkProgramCompletion(id, studentCourses)
 		results = append(results, result)
 	}
 
-	// 6. 回傳結果
+	// 回傳結果
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
@@ -1257,35 +1239,14 @@ func recommendProgramsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. 解析 multipart 表單
-	err := r.ParseMultipartForm(32 << 20) // 32MB
+	// 解析學生資料
+	studentCourses, err := parseStudentDataFromRequest(r)
 	if err != nil {
-		http.Error(w, "解析表單失敗: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// 2. 讀取學生 JSON 檔案
-	file, _, err := r.FormFile("student_json")
-	if err != nil {
-		http.Error(w, "讀取檔案失敗: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		http.Error(w, "讀取檔案內容失敗: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// 3. 解析學生課程資料
-	studentCourses, err := loadStudentData(fileBytes)
-	if err != nil {
-		http.Error(w, "解析學生資料失敗: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// 4. 遍歷所有學程進行檢核
+	// 遍歷所有學程進行檢核
 	var recommendations []Recommendation
 
 	for id, program := range programs {
@@ -1329,7 +1290,7 @@ func recommendProgramsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 5. 排序：依完成度由高至低
+	// 排序：依完成度由高至低
 	sort.Slice(recommendations, func(i, j int) bool {
 		return recommendations[i].CompletionRate > recommendations[j].CompletionRate
 	})
@@ -1356,7 +1317,7 @@ func recommendProgramsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 7. 回傳結果
+	// 回傳結果
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(topRecommendations)
 }
