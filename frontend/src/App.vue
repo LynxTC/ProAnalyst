@@ -191,12 +191,12 @@ const addProgramToSelection = (id, name) => {
     if (!selectedProgramIds.value.includes(id)) {
         selectedProgramIds.value.push(id);
         showNotification(`已加入「${name}」`, 'success', {
-            text: '前往學程檢核區',
+            text: '前往確認學程要求',
             handler: () => { activeTab.value = 'check'; notification.value.show = false; }
         });
     } else {
         showNotification(`「${name}」已在清單中`, 'info', {
-            text: '前往學程檢核區',
+            text: '前往確認學程要求',
             handler: () => { activeTab.value = 'check'; notification.value.show = false; }
         });
     }
@@ -260,8 +260,8 @@ const isReadyToCheck = computed(() => {
 const buttonText = computed(() => {
     if (isChecking.value) return '檢核中...';
     if (!studentFile.value) return '請先上傳檔案';
-    if (selectedProgramIds.value.length === 0) return '請選取學程後點擊開始檢核';
-    return '開始檢核';
+    if (selectedProgramIds.value.length === 0) return '請選取學程';
+    return '開始確認';
 });
 
 const selectedProgramsList = computed(() => {
@@ -354,10 +354,12 @@ onUnmounted(() => {
 
 <template>
     <div class="max-w-5xl mx-auto glass-panel rounded-3xl p-8 sm:p-12 my-8 sm:my-12 animate-entry">
-        <h1 class="text-4xl sm:text-5xl font-bold text-center text-emerald-900 mb-4 tracking-wide font-serif">政大 學程推薦＆檢核
+        <h1
+            class="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-emerald-900 mb-4 tracking-wide font-serif whitespace-nowrap">
+            政大 學程推薦＆檢核
         </h1>
         <p class="text-stone-600 mb-10 text-center text-lg max-w-2xl mx-auto leading-relaxed">
-            上傳修課紀錄，即時分析學程匹配度與修習進度，使繁雜的學程規定不再讓您頭痛
+            上傳修課紀錄，即時分析與學程匹配度及修習進度，讓有興趣申請學程的您<br>不再因繁雜的學程規定卻步，掌握所有通過學程的先機
         </p>
 
         <div
@@ -393,9 +395,10 @@ onUnmounted(() => {
             <div class="flex-grow border-t border-gray-300"></div>
             <div class="flex items-center mx-4 text-gray-600 font-medium text-center">
                 <span class="flex-shrink-0 mr-2">⬇️</span>
-                <span class="flex flex-wrap justify-center gap-x-2 font-bold font-serif">
-                    <span class="whitespace-nowrap">可交由系統幫您推薦匹配的學程</span>
-                    <span class="whitespace-nowrap">或是直接自行選擇個別學程查看進度</span>
+                <span
+                    class="flex flex-wrap justify-center gap-x-1 sm:gap-x-2 font-normal font-serif text-sm sm:text-lg">
+                    <span class="whitespace-nowrap">由 <span class="font-[750]">系統智慧推薦</span> 最適合您的學程</span>
+                    <span class="whitespace-nowrap">或是選擇個別學程 <span class="font-[750]">查看修習進度</span></span>
                 </span>
                 <span class="flex-shrink-0 ml-2">⬇️</span>
             </div>
@@ -413,7 +416,7 @@ onUnmounted(() => {
                 <button @click="activeTab = 'check'"
                     class="py-2.5 px-6 sm:px-8 rounded-xl text-sm sm:text-base font-bold transition-all duration-300 focus:outline-none flex items-center gap-2 font-serif tracking-wide"
                     :class="activeTab === 'check' ? 'bg-white text-emerald-900 shadow-md transform scale-105' : 'text-stone-500 hover:text-stone-700'">
-                    <span>✏️</span> 學程檢核
+                    <span>✏️</span> 個別學程要求
                 </button>
             </div>
         </div>
@@ -431,7 +434,7 @@ onUnmounted(() => {
                     「錯失任何一個學程通過的機會是不可能的。」
                 </blockquote>
                 <p class="text-stone-600 mb-6 text-lg leading-relaxed">
-                    系統將比對您的修課紀錄與所有學程標準，推薦匹配度較高的學程供您參考
+                    系統將比對您的修課紀錄與所有學程標準，推薦完成度較高的學程供您參考
                 </p>
 
                 <button @click="startRecommendation" :disabled="!studentFile || isRecommending"
@@ -450,29 +453,14 @@ onUnmounted(() => {
                 </button>
 
                 <div v-if="hasRunRecommendation" class="space-y-4 mt-2">
-                    <!-- 前往檢核區按鈕 (頂部) -->
-                    <div class="mb-4 text-center">
-                        <button @click="activeTab = 'check'"
-                            class="text-emerald-600 hover:text-emerald-800 font-bold transition-colors flex items-center justify-center mx-auto border-b-2 border-transparent hover:border-emerald-600 pb-0.5">
-                            前往學程檢核區查看詳情
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-
                     <div v-if="recommendationResults.length === 0"
                         class="text-stone-500 text-sm italic text-center py-8">
                         尚無符合推薦門檻的學程
                     </div>
                     <div v-for="rec in rankedRecommendations" :key="rec.programID"
-                        class="group bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
+                        class="group bg-white p-6 rounded-2xl border border-stone-100 shadow-sm transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
                         <!-- Decorative background accent -->
-                        <div
-                            class="absolute top-0 left-0 w-1.5 h-full bg-stone-200 group-hover:bg-emerald-500 transition-colors duration-300">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-600 transition-colors duration-300">
                         </div>
 
                         <div class="flex items-center gap-4">
@@ -523,7 +511,7 @@ onUnmounted(() => {
                                         完成度 <span class="ml-1 text-emerald-600 font-bold">100%</span>
                                     </template>
                                     <template v-else-if="rec.completionRate >= 1">
-                                        <span class="text-amber-600 font-bold">尚有其他條件未滿足，加入檢核瞭解更多</span>
+                                        <span class="text-amber-600 font-bold">尚有其他條件未滿足，點擊按鈕瞭解更多↗</span>
                                     </template>
                                     <template v-else>
                                         完成度 <span class="ml-1 text-emerald-600 font-bold">{{ (rec.completionRate *
@@ -532,17 +520,17 @@ onUnmounted(() => {
                                 </div>
                             </div>
                             <button @click="addProgramToSelection(rec.programID, rec.programName)"
-                                class="px-5 py-2.5 bg-stone-100 text-stone-600 hover:bg-emerald-600 hover:text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-md">
-                                加入檢核
+                                class="px-6 py-3 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-sm font-bold transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                還少哪些課？
                             </button>
                         </div>
                     </div>
 
-                    <!-- 前往檢核區按鈕 -->
+                    <!-- 前往要求區按鈕 -->
                     <div v-if="hasRunRecommendation" class="mt-8 text-center pt-6 border-t border-stone-100">
                         <button @click="activeTab = 'check'"
                             class="px-8 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-all duration-200 flex items-center justify-center mx-auto transform hover:-translate-y-1">
-                            前往學程檢核區查看詳情
+                            前往確認學程要求
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20"
                                 fill="currentColor">
                                 <path fill-rule="evenodd"
@@ -711,7 +699,7 @@ onUnmounted(() => {
                         <p class="text-stone-700 mb-6 leading-relaxed">{{ result.programDescription }}</p>
 
                         <div class="mb-6 p-5 bg-white/60 rounded-xl border border-black/5 backdrop-blur-sm">
-                            <h4 class="text-lg font-bold text-stone-800 mb-3 font-serif">學分總計檢核</h4>
+                            <h4 class="text-lg font-bold text-stone-800 mb-3 font-serif">學程總學分要求</h4>
                             <div class="flex justify-between text-sm">
                                 <span class="font-medium text-stone-600">應修總學分:</span>
                                 <span class="font-mono text-base"
@@ -730,7 +718,7 @@ onUnmounted(() => {
                             </p>
                         </div>
 
-                        <h4 class="text-lg font-bold text-stone-800 mb-4 font-serif">課程分類要求檢核</h4>
+                        <h4 class="text-lg font-bold text-stone-800 mb-4 font-serif">分項要求</h4>
 
                         <div v-for="cat in result.categoryResults" :key="cat.category"
                             class="mb-4 p-4 rounded-xl border transition-all"
@@ -838,7 +826,8 @@ onUnmounted(() => {
             </h3>
             <p class="text-stone-600 mb-8 leading-relaxed">
                 本系統檢核結果僅供參考<br>可能因申請年度不同或修習同名課程產生檢核誤差<br><br>
-                <span class="font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded">實際修習狀態以學程設置單位認定為準</span>
+                <span
+                    class="font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded whitespace-nowrap text-xs sm:text-base">實際修習狀態以學程設置單位認定為準</span>
             </p>
             <div class="flex justify-center space-x-3">
                 <button @click="showDisclaimerModal = false"
@@ -847,46 +836,51 @@ onUnmounted(() => {
                 </button>
                 <button @click="disclaimerAction === 'check' ? executeCheck() : executeRecommendation()"
                     class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-colors">
-                    {{ disclaimerAction === 'check' ? '確定並開始檢核' : '開始分析' }}
+                    {{ disclaimerAction === 'check' ? '確定' : '開始分析' }}
                 </button>
             </div>
         </div>
     </div>
 
     <!-- 達標恭喜 Modal -->
-    <div v-if="showCompletionModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-        <div
-            class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all scale-100 text-center border border-stone-100">
-            <div class="text-5xl mb-4">🎉</div>
-            <h3 class="text-2xl font-bold text-emerald-900 mb-4 font-serif tracking-wide">
-                恭喜！學程修畢達成
-            </h3>
-            <p class="text-stone-600 mb-6 leading-relaxed">
-                您已達成以下 <span class="font-bold text-emerald-700">{{ completedPrograms.length }}</span> 個學程的修畢要求：
-            </p>
+    <Transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0"
+        enter-to-class="opacity-100" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100"
+        leave-to-class="opacity-0">
+        <div v-if="showCompletionModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
             <div
-                class="bg-stone-50 rounded-xl p-4 mb-6 max-h-40 overflow-y-auto custom-scrollbar border border-stone-100">
-                <ul class="space-y-2">
-                    <li v-for="name in completedPrograms" :key="name" class="text-emerald-800 font-bold font-serif">
-                        {{ name }}
-                    </li>
-                </ul>
+                class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto transform transition-all scale-100 text-center border border-stone-100">
+                <div class="text-5xl mb-4">🎉</div>
+                <h3 class="text-2xl font-bold text-emerald-900 mb-4 font-serif tracking-wide">
+                    恭喜！學程修畢達成
+                </h3>
+                <p class="text-stone-600 mb-6 leading-relaxed">
+                    您已達成以下 <span class="font-bold text-emerald-700">{{ completedPrograms.length }}</span> 個學程的修畢要求：
+                </p>
+                <div
+                    class="bg-stone-50 rounded-xl p-4 mb-6 max-h-40 overflow-y-auto custom-scrollbar border border-stone-100">
+                    <ul class="space-y-2">
+                        <li v-for="name in completedPrograms" :key="name" class="text-emerald-800 font-bold font-serif">
+                            {{ name }}
+                        </li>
+                    </ul>
+                </div>
+                <div
+                    class="mb-6 text-sm text-amber-800 bg-amber-50 p-4 rounded-xl border border-amber-100 text-justify leading-relaxed shadow-sm">
+                    <span class="font-bold block mb-1 text-amber-900">⚠️ 學分認列注意事項</span>
+                    部分學程對於雙主修、輔系或原系所之學分認列可能有特殊限制（如：不得重複認列）。本系統僅進行初步檢核，<span
+                        class="font-bold">實際認列結果請以各學程設置單位審核為準</span>。
+                </div>
+                <p class="text-sm text-stone-400 mb-8 italic">
+                    請記得及時向相關學程設置單位提出證明申請
+                </p>
+                <button @click="showCompletionModal = false"
+                    class="w-full px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-colors">
+                    我知道了
+                </button>
             </div>
-            <div
-                class="mb-6 text-sm text-amber-800 bg-amber-50 p-4 rounded-xl border border-amber-100 text-justify leading-relaxed shadow-sm">
-                <span class="font-bold block mb-1 text-amber-900">⚠️ 學分認列注意事項</span>
-                部分學程對於雙主修、輔系或原系所之學分認列可能有特殊限制（如：不得重複認列）。本系統僅進行初步檢核，<span class="font-bold">實際認列結果請以各學程設置單位審核為準</span>。
-            </div>
-            <p class="text-sm text-stone-400 mb-8 italic">
-                請記得及時向相關學程設置單位提出證明申請
-            </p>
-            <button @click="showCompletionModal = false"
-                class="w-full px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 transition-colors">
-                我知道了
-            </button>
         </div>
-    </div>
+    </Transition>
 
     <!-- Scroll to Top Button -->
     <Transition enter-active-class="transition ease-out duration-300"
@@ -933,6 +927,14 @@ onUnmounted(() => {
                     title="關閉">&times;</button>
             </div>
             <div class="p-0 overflow-y-auto flex-grow bg-stone-50">
+                <div
+                    class="p-4 bg-amber-50 border-b border-amber-100 text-amber-800 text-xs sm:text-sm flex justify-between items-center">
+                    <span>若下方表單無法正常顯示，請點擊右側按鈕：</span>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfy53oPNPgDu_O1zwzWWjbbV4A3rn_6RA8FKwEsx8P9kv6r7A/viewform"
+                        target="_blank"
+                        class="bg-amber-600 text-white px-3 py-1 rounded-md font-bold hover:bg-amber-700 transition-colors">直接開啟表單
+                        ↗</a>
+                </div>
                 <iframe
                     src="https://docs.google.com/forms/d/e/1FAIpQLSfy53oPNPgDu_O1zwzWWjbbV4A3rn_6RA8FKwEsx8P9kv6r7A/viewform"
                     class="w-full h-[80vh] sm:h-[70vh]" frameborder="0" marginheight="0" marginwidth="0">載入中…</iframe>
@@ -1093,6 +1095,7 @@ body {
     background-size: 100% 100vh;
     background-attachment: fixed;
     color: #1c1917;
+    overflow-x: hidden;
 }
 
 .font-serif {
