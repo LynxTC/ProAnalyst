@@ -268,10 +268,12 @@ const buttonText = computed(() => {
 
 const selectedProgramsList = computed(() => {
     const list = [];
+    const seenIds = new Set();
     for (const college of Object.values(programsByCollege.value)) {
         for (const [id, program] of Object.entries(college)) {
-            if (selectedProgramIds.value.includes(id)) {
+            if (selectedProgramIds.value.includes(id) && !seenIds.has(id)) {
                 list.push({ id, name: program.name });
+                seenIds.add(id);
             }
         }
     }
