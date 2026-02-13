@@ -19,6 +19,37 @@ const progressPercentage = computed(() => {
     const pct = (props.result.totalPassedCredits / props.result.minRequiredCredits) * 100;
     return Math.min(pct, 100);
 });
+
+const processedCategoryResults = computed(() => {
+    if (!props.result.categoryResults) return [];
+
+    return props.result.categoryResults.map(cat => {
+        let shouldHide = cat.hideCourseList;
+
+        // 金融科技專長學程：隱藏非標準類別（如群A+群B檢核）的課程列表
+        if (props.result.programName === '金融科技專長學程') {
+            const standardCategories = ['群A：資訊課程', '群B：金融課程', '選修C：金融科技課程'];
+            if (!standardCategories.includes(cat.category)) {
+                shouldHide = true;
+            }
+        }
+
+        // 跨領域精準健康學分學程：隱藏非標準類別（如群組檢核）的課程列表
+        if (props.result.programName === '跨領域精準健康學分學程') {
+            const standardCategories = ['必修課程', '群A', '群B', '群C', '群D'];
+            if (!standardCategories.includes(cat.category)) {
+                shouldHide = true;
+            }
+        }
+
+        // 人力資源管理學程：隱藏總門數檢核類別（該類別僅為計數檢查，無獨立課程列表）
+        if (props.result.programName && props.result.programName.includes('人力資源管理學程') && cat.category === '程序課程總門數檢核') {
+            shouldHide = true;
+        }
+
+        return { ...cat, hideCourseList: shouldHide };
+    });
+});
 </script>
 
 <template>
@@ -111,7 +142,7 @@ const progressPercentage = computed(() => {
 
             <!-- Categories Grid -->
             <div class="space-y-4">
-                <div v-for="cat in result.categoryResults" :key="cat.category"
+                <div v-for="cat in processedCategoryResults" :key="cat.category"
                     class="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
 
                     <!-- Category Header -->
@@ -145,7 +176,7 @@ const progressPercentage = computed(() => {
                         </div>
 
                         <!-- Course List -->
-                        <ul class="space-y-1">
+                        <ul v-if="!cat.hideCourseList" class="space-y-1">
                             <li v-if="cat.passedCourses.length === 0" class="text-sm text-stone-400 italic py-1">
                                 無符合課程
                             </li>
@@ -154,7 +185,9 @@ const progressPercentage = computed(() => {
                                 <span class="font-medium text-stone-700 truncate pr-2">{{ c.name }}</span>
                                 <div
                                     class="flex items-center gap-2 shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity">
-                                    <span class="font-mono text-sm text-stone-500"><span class="font-bold text-stone-700">{{ c.credit }} 學分</span> / {{ c.score }}</span>
+                                    <span class="font-mono text-sm text-stone-500"><span
+                                            class="font-bold text-stone-700">{{ c.credit }} 學分</span> / {{ c.score
+                                            }}</span>
                                 </div>
                             </li>
                         </ul>
