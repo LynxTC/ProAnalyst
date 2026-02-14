@@ -1238,59 +1238,6 @@
                 }
             ]
         },
-        "computer_science": {
-            "name": "資訊科學系微學程",
-            "min_credits": 48.0,
-            "description": "四大領域各自皆須至少修滿 12 學分",
-            "requirements": [
-                {
-                    "category": "人工智慧 (Min 12 學分)",
-                    "min_credits": 12.0,
-                    "courses": [
-                        "人工智慧概論",
-                        "資料庫系統",
-                        "資料科學",
-                        "機器學習概論",
-                        "電腦視覺"
-                    ]
-                },
-                {
-                    "category": "多媒體 (Min 12 學分)",
-                    "min_credits": 12.0,
-                    "courses": [
-                        "人機互動",
-                        "電腦圖學",
-                        "軟體開發環境應用設計",
-                        "虛擬實境與觸覺回饋互動",
-                        "視訊壓縮",
-                        "資訊視覺化"
-                    ]
-                },
-                {
-                    "category": "資訊安全 (Min 12 學分)",
-                    "min_credits": 12.0,
-                    "courses": [
-                        "資訊安全",
-                        "資訊理論",
-                        "現代密碼學",
-                        "數位簽章",
-                        "工業物聯網與營運技術安全"
-                    ]
-                },
-                {
-                    "category": "網路與資訊系統 (Min 12 學分)",
-                    "min_credits": 12.0,
-                    "courses": [
-                        "計算機網路",
-                        "行動通訊網路",
-                        "網路與庭訊概論",
-                        "分散式系統",
-                        "軟體工程概論",
-                        "等候理論"
-                    ]
-                }
-            ]
-        },
         "mathematical_information": {
             "name": "數理資訊微學程",
             "min_credits": 12.0,
@@ -1697,6 +1644,76 @@
         }
     },
     "資訊學院": {
+        "computer_science_AI": {
+            "name": "資訊科學系微學程（人工智慧）",
+            "min_credits": 12.0,
+            "description": "至少修滿 12 學分",
+            "requirements": [
+                {
+                    "category": "認列範疇",
+                    "courses": [
+                        "人工智慧概論",
+                        "資料庫系統",
+                        "資料科學",
+                        "機器學習概論",
+                        "電腦視覺"
+                    ]
+                }
+            ]
+        },
+        "computer_science_multimedia": {
+            "name": "資訊科學系微學程（多媒體）",
+            "min_credits": 12.0,
+            "description": "至少修滿 12 學分",
+            "requirements": [
+                {
+                    "category": "認列範疇",
+                    "courses": [
+                        "人機互動",
+                        "電腦圖學",
+                        "軟體開發環境應用設計",
+                        "虛擬實境與觸覺回饋互動",
+                        "視訊壓縮",
+                        "資訊視覺化"
+                    ]
+                }
+            ]
+        },
+        "computer_science_information_security": {
+            "name": "資訊科學系微學程（資訊安全）",
+            "min_credits": 12.0,
+            "description": "至少修滿 12 學分",
+            "requirements": [
+                {
+                    "category": "認列範疇",
+                    "courses": [
+                        "資訊安全",
+                        "資訊理論",
+                        "現代密碼學",
+                        "數位簽章",
+                        "工業物聯網與營運技術安全"
+                    ]
+                }
+            ]
+        },
+        "computer_science_network_information_system": {
+            "name": "資訊科學系微學程（網路與資訊系統）",
+            "min_credits": 12.0,
+            "description": "至少修滿 12 學分",
+            "requirements": [
+                {
+                    "category": "認列範疇",
+                    "courses": [
+                        "計算機網路",
+                        "行動通訊網路",
+                        "網路與庭訊概論",
+                        "分散式系統",
+                        "軟體工程概論",
+                        "等候理論"
+                    ]
+                }
+            ]
+        },
         "information_security": {
             "name": "資訊安全微學程",
             "min_credits": 9.0,

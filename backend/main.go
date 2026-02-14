@@ -143,9 +143,9 @@ func loadPrograms() error {
 
 	// 定義檔案與學程類型的對應
 	files := map[string]string{
-		"micro_programs.json":              "micro",
-		"credit_programs.json":             "credit",
-		"commerce_specialty_programs.json": "specialty",
+		"data/micro_programs.json":              "micro",
+		"data/credit_programs.json":             "credit",
+		"data/commerce_specialty_programs.json": "specialty",
 	}
 
 	for filename, pType := range files {
@@ -203,7 +203,7 @@ func loadPrograms() error {
 
 // 載入系所分類資料 (用於判斷商學院學生)
 func loadDepartments() error {
-	file, err := os.ReadFile("departments_grouped.json")
+	file, err := os.ReadFile("data/departments_grouped.json")
 	if err != nil {
 		return err
 	}

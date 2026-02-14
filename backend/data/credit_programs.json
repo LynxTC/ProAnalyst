@@ -956,7 +956,7 @@
     },
     "外國語文學院": {
         "slavic_russian": {
-            "name": "斯拉夫語文學程⸺俄國語文學程",
+            "name": "斯拉夫語文學程（俄國）",
             "min_credits": 20.0,
             "description": "修習認列科目達 20 學分（必修 12 + 選修 8）",
             "requirements": [
@@ -983,7 +983,7 @@
             ]
         },
         "slavic_czech": {
-            "name": "斯拉夫語文學程⸺捷克語文學程",
+            "name": "斯拉夫語文學程（捷克）",
             "min_credits": 20.0,
             "description": "修習認列科目達 20 學分（必修 12 + 選修 8）",
             "requirements": [
@@ -1015,7 +1015,7 @@
             ]
         },
         "slavic_polish": {
-            "name": "斯拉夫語文學程⸺波蘭語文學程",
+            "name": "斯拉夫語文學程（波蘭）",
             "min_credits": 20.0,
             "description": "修習認列科目達 20 學分（必修 12 + 選修 8）",
             "requirements": [
