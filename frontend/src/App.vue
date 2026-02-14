@@ -423,7 +423,7 @@ onUnmounted(() => {
     <div class="max-w-5xl mx-auto glass-panel rounded-3xl p-8 sm:p-12 my-8 sm:my-12 animate-entry">
         <h1
             class="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-emerald-900 mb-4 tracking-wide font-serif whitespace-nowrap">
-            政大 學程潛能分析師
+            政大 學程潛能分析
         </h1>
         <p class="text-stone-600 mb-10 text-center text-lg max-w-2xl mx-auto leading-relaxed">
             上傳修課紀錄，即時分析與學程匹配度及修習進度<br>不再錯過任何一個學程的申請，掌握所有通過學程的良機
@@ -437,8 +437,8 @@ onUnmounted(() => {
                 <span class="flex-shrink-0 mr-2">⬇️</span>
                 <span
                     class="flex flex-wrap justify-center gap-x-1 sm:gap-x-2 font-normal font-serif text-sm sm:text-lg">
-                    <span class="whitespace-nowrap">由 <span class="font-[750]">分析師智慧推薦</span> 最適合您的學程</span>
-                    <span class="whitespace-nowrap">或選擇個別學程 <span class="font-[750]">查看修習進度</span></span>
+                    <span class="whitespace-nowrap">由分析師 <span class="font-[750]">智慧推薦</span> 最適合的學程</span>
+                    <span class="whitespace-nowrap">或是選擇個別學程 <span class="font-[750]">查看修習進度</span></span>
                 </span>
                 <span class="flex-shrink-0 ml-2">⬇️</span>
             </div>
