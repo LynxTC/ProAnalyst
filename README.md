@@ -30,17 +30,19 @@
 
 ```text
 program-checker/
-├── backend/                             # Go 後端核心
+├── backend/                         # Go 後端核心
 │   ├── main.go                          # API 服務與檢核邏輯
 │   ├── special_handlers.go              # 特殊學程規則與進階檢核邏輯
-│   ├── credit_programs.json             # 學分學程資料庫
-│   ├── micro_programs.json              # 微學程資料庫
-│   ├── commerce_specialty_programs.json # 院級專長學程資料庫
+│   ├── data/                            # 資料庫檔案
+│   │   ├── credit_programs.json             # 學分學程資料庫
+│   │   ├── micro_programs.json              # 微學程資料庫
+│   │   ├── commerce_specialty_programs.json # 院級專長學程資料庫
+│   │   └── departments_grouped.json         # 系所歸屬定義
 │   └── ...
-├── frontend/                            # Vue 3 前端介面
+├── frontend/                        # Vue 3 前端介面
 │   ├── .env.example                     # 環境變數範例
 │   └── ...
-└── README.md                            # 說明文件
+└── README.md                        # 說明文件
 ```
 
 ## **快速開始 (開發環境)**
@@ -53,10 +55,11 @@ program-checker/
    ```bash
    cd backend
    ```
-2. 確保已備妥學程定義檔（位於目錄下）：
-   * `micro_programs.json`
-   * `credit_programs.json`
-   * `commerce_specialty_programs.json`
+2. 確保已備妥學程定義檔（位於 `data/` 目錄下）：
+   * `data/micro_programs.json`
+   * `data/credit_programs.json`
+   * `data/commerce_specialty_programs.json`
+   * `data/departments_grouped.json`
 3. 啟動服務 (預設 Port 8080)：
    ```bash
    go run .
@@ -93,11 +96,12 @@ program-checker/
 
 ## **📝 學程定義維護**
 
-後端 `backend` 資料夾中的 JSON 檔案定義了各學程的規則：
+後端 `backend/data` 資料夾中的 JSON 檔案定義了各學程的規則：
 
-* `credit_programs.json`: 一般學分學程
-* `micro_programs.json`: 微學程
-* `commerce_specialty_programs.json`: 院級專長學程（目前僅商學院使用）
+* `data/credit_programs.json`: 一般學分學程
+* `data/micro_programs.json`: 微學程
+* `data/commerce_specialty_programs.json`: 院級專長學程（目前僅商學院使用）
+* `data/departments_grouped.json`: 系所歸屬定義（用於判斷學生學藉歸屬，檢查是否牴觸學程身分限制）
 
 ### **JSON 結構說明**
 
