@@ -425,8 +425,12 @@ onUnmounted(() => {
             class="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-emerald-900 mb-4 tracking-wide font-serif whitespace-nowrap">
             政大 學程潛能分析
         </h1>
-        <p class="text-stone-600 mb-10 text-center text-lg max-w-2xl mx-auto leading-relaxed">
+        <p class="text-stone-600 mb-2 text-center text-lg max-w-2xl mx-auto leading-relaxed">
             上傳修課紀錄，即時分析與學程匹配度及修習進度<br>不再錯過任何一個學程的申請，掌握所有通過學程的良機
+        </p>
+        <p class="text-stone-400 text-xs text-center mb-10">
+            （分析師的小秘密🙊：通過的學分學程可以<a href="https://gecenter.nccu.edu.tw/student-zone/gec-credit-waiver/" target="_blank"
+                class="underline hover:text-emerald-600 transition-colors">認定成對應領域的通識③學分</a>喔）
         </p>
 
         <FileUpload :studentFile="studentFile" @file-change="processFile" />
