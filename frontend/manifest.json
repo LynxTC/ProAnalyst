@@ -1,10 +1,10 @@
 {
     "name": "學程潛能分析師",
-    "short_name": "學程分析",
+    "short_name": "ProAnalyst",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#4A90E2",
+    "background_color": "#059669",
+    "theme_color": "#ffffff",
     "icons": [
         {
             "src": "icon-192.png",
