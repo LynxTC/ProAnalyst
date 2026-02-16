@@ -1,6 +1,6 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <!-- 背景：圓形品牌白色 -->
-  <circle cx="256" cy="256" r="256" fill="#059669"/>
+  <rect width="512" height="512" fill="#059669"/>
   <!-- 圖示：黑色學士帽 (上移以平衡菱形平頂的視覺比重) -->
   <g transform="translate(27, 16) scale(0.85)">
     <!-- 黑色帽子本體 -->
