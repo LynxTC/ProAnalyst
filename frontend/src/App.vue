@@ -422,11 +422,11 @@ onUnmounted(() => {
 <template>
     <div class="max-w-5xl mx-auto glass-panel rounded-3xl p-8 sm:p-12 my-8 sm:my-12 animate-entry">
         <h1
-            class="text-4xl sm:text-5xl md:text-6xl font-bold text-center text-emerald-700 mb-2 tracking-tight font-serif">
+            class="text-5xl sm:text-6xl font-bold text-center text-emerald-700 mb-2 tracking-tight font-serif">
             ProAnalyst
         </h1>
         <p
-            class="text-lg sm:text-xl md:text-2xl font-bold text-center text-stone-700 mb-6 tracking-widest md:tracking-[0.3em] font-serif">
+            class="text-xl sm:text-2xl font-bold text-center text-stone-700 mb-6 tracking-widest tracking-[0.3em] font-serif">
             個人化學程潛能分析
         </p>
         <p class="text-stone-600 mb-2 text-center text-lg max-w-2xl mx-auto leading-relaxed">
