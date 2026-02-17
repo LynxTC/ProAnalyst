@@ -422,9 +422,12 @@ onUnmounted(() => {
 <template>
     <div class="max-w-5xl mx-auto glass-panel rounded-3xl p-8 sm:p-12 my-8 sm:my-12 animate-entry">
         <h1
-            class="text-2xl sm:text-4xl md:text-5xl font-bold text-center text-emerald-900 mb-4 tracking-wide font-serif whitespace-nowrap">
-            政大 學程潛能分析
+            class="text-4xl sm:text-5xl md:text-6xl font-bold text-center text-emerald-700 mb-2 tracking-tight font-serif">
+            ProAnalyst
         </h1>
+        <p class="text-xl sm:text-2xl font-bold text-center text-stone-700 mb-6 tracking-[0.3em] font-serif">
+            個人化學程潛能分析
+        </p>
         <p class="text-stone-600 mb-2 text-center text-lg max-w-2xl mx-auto leading-relaxed">
             上傳修課紀錄，即時分析與學程匹配度及修習進度<br>不再錯過任何一個學程的申請，掌握所有通過學程的良機
         </p>
@@ -768,12 +771,16 @@ onUnmounted(() => {
 
         <!-- Footer -->
         <footer class="mt-16 pt-8 border-t border-stone-200 text-center text-sm text-stone-400 pb-8">
-            <div class="flex justify-center space-x-4">
+            <div class="flex justify-center space-x-4 mb-3">
                 <button @click="showPrivacyModal = true"
                     class="hover:text-emerald-600 transition-colors font-medium">隱私權政策</button>
                 <span class="text-stone-300">|</span>
                 <button @click="showTermsModal = true"
                     class="hover:text-emerald-600 transition-colors font-medium">服務條款</button>
+            </div>
+            <div class="flex justify-center mb-2">
+                <img src="./assets/logo_transparent.svg" alt="ProAnalyst Logo"
+                    class="h-8 w-auto transition-opacity duration-300" />
             </div>
             <p class="mb-2">&copy; {{ new Date().getFullYear() }} 𤫹焈焈麀普羅安納利斯特團隊. Licensed under the MIT License.</p>
         </footer>
