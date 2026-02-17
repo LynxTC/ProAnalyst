@@ -421,8 +421,7 @@ onUnmounted(() => {
 
 <template>
     <div class="max-w-5xl mx-auto glass-panel rounded-3xl p-8 sm:p-12 my-8 sm:my-12 animate-entry">
-        <h1
-            class="text-5xl sm:text-6xl font-bold text-center text-emerald-700 mb-2 tracking-tight font-serif">
+        <h1 class="text-5xl sm:text-6xl font-bold text-center text-emerald-700 mb-2 tracking-tight font-serif">
             ProAnalyst
         </h1>
         <p
